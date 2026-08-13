@@ -1,2 +1,2 @@
 # c-compiler
-An extremely simple C compiler.
+An ANSI C (C89) compiler.

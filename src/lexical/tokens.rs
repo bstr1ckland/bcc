@@ -43,10 +43,10 @@ pub enum TokenType {
     SlashEqual,             // /=
     StarEqual,              // *=
     EqualEqual,             // ==
-    Identifier(String),     // int x
-    CharLiteral(char),      // 'a'
-    StringLiteral(String),  // "hello"
-    NumberLiteral(String),  // 3.14 (will be converted later)
+    Identifier,             // int x, where x is identifer
+    CharLiteral,            // 'a'
+    StringLiteral,          // "hello"
+    NumberLiteral,          // 3.14
 
     // ======================
     // Reserved Keywords
@@ -160,6 +160,8 @@ pub struct Token {
     token: TokenType,
     line: i32,
     column: i32,
+    // store <optional> value for things like
+    // char literals, string literals, number literals..?
 }
 // TODO implement later:
 //  - unwrap string, numbers, identifers, chars,

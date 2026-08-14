@@ -1,6 +1,7 @@
 // bcc Ben's C Compiler for C89 (ANSI C)
 // Defining lexical token types.
 
+#[derive(Debug)]
 pub enum TokenType {
     // ======================
     // General Token Types
@@ -42,7 +43,9 @@ pub enum TokenType {
     SlashEqual,             // /=
     StarEqual,              // *=
     EqualEqual,             // ==
-    StringLiteral(String),  // hello
+    Identifier(String),     // int x
+    CharLiteral(char),      // 'a'
+    StringLiteral(String),  // "hello"
     NumberLiteral(String),  // 3.14 (will be converted later)
 
     // ======================
@@ -70,9 +73,6 @@ pub enum TokenType {
     While,
     Break,
     Continue,
-
-    // Other
-    Include,
 }
 
 impl TokenType {
@@ -103,8 +103,6 @@ impl TokenType {
             '<' => Some(TokenType::LessThan),
             '|' => Some(TokenType::Pipe),
 
-            // TODO: Find out if there are more and implement them
-
             _ => None,
         }
     }
@@ -114,6 +112,14 @@ impl TokenType {
         match s {
             ">=" => Some(TokenType::GreaterThanOrEqual),
             "<=" => Some(TokenType::LessThanOrEqual),
+            "++" => Some(TokenType::PlusPlus),
+            "--" => Some(TokenType::MinusMinus),
+            "+=" => Some(TokenType::PlusEqual),
+            "-=" => Some(TokenType::MinusEqual),
+            "/=" => Some(TokenType::SlashEqual),
+            "*=" => Some(TokenType::StarEqual),
+            "==" => Some(TokenType::EqualEqual),
+
             _ => None,
         }
     }
@@ -122,13 +128,38 @@ impl TokenType {
     pub fn keywords(keyword: &str) -> Option<TokenType> {
         match keyword {
             // Data types
-            "void" => Some(TokenType::Void),
+            "void"     => Some(TokenType::Void),
+            "int"      => Some(TokenType::Int),
+            "char"     => Some(TokenType::Char),
+            "float"    => Some(TokenType::Float),
+            "double"   => Some(TokenType::Double),
+            "short"    => Some(TokenType::Short),
+            "long"     => Some(TokenType::Long),
+            "signed"   => Some(TokenType::Signed),
+            "unsigned" => Some(TokenType::Unsigned),
+            "const"    => Some(TokenType::Const),
 
             // Control Flow
-            "if" => Some(TokenType::If),
+            "if"       => Some(TokenType::If),
+            "else"     => Some(TokenType::Else),
+            "switch"   => Some(TokenType::Switch),
+            "return"   => Some(TokenType::Return),
+            "for"      => Some(TokenType::For),
+            "while"    => Some(TokenType::While),
+            "break"    => Some(TokenType::Break),
+            "continue" => Some(TokenType::Continue),
 
             _ => None,
 
         }
     }
 }
+
+#[derive(Debug)]
+pub struct Token {
+    token: TokenType,
+    line: i32,
+    column: i32,
+}
+// TODO implement later:
+//  - unwrap string, numbers, identifers, chars,

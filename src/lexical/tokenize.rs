@@ -3,12 +3,22 @@
 
 use super::tokens::{Token, TokenType};
 
-pub fn tokenize() -> Vec<Token> {
+pub fn tokenize(input: &str) -> Vec<Token> {
     let mut tokens: Vec<Token> = Vec::new();
 
-    tokens
+    let line: u32 = 1;
+    let column: u32 = 1;
 
-    // TODO implement tokenizer 
+    // loop through input string char by char.
+    // process the following:
+    //      - single char tokens
+    //      - keywords
+    //      - numbers
+    //      - identifiers
+    //      - other stuff in tokens.rs
+    //      - whitespace
+
+    tokens
 }
 
 // TODO implement test functions

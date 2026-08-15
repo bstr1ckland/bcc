@@ -21,8 +21,6 @@ pub enum TokenType {
     Equal,                  // =
     Dot,                    // .
     Comma,                  // ,
-    DoubleQuotation,        // "
-    SingleQuotation,        // '
 
     // Math operations and comparisons
     Plus,                   // +
@@ -92,8 +90,6 @@ impl TokenType {
             '=' => Some(TokenType::Equal),
             '.' => Some(TokenType::Dot),
             ',' => Some(TokenType::Comma),
-            '"' => Some(TokenType::DoubleQuotation),
-            '\'' => Some(TokenType::SingleQuotation),
 
             '+' => Some(TokenType::Plus),
             '-' => Some(TokenType::Minus),
@@ -156,12 +152,33 @@ impl TokenType {
 }
 
 #[derive(Debug)]
-pub struct Token {
-    token: TokenType,
-    line: i32,
-    column: i32,
-    // store <optional> value for things like
-    // char literals, string literals, number literals..?
+pub enum TokenValue {
+    Identifer(String),
+    StringLiteral(String),
+    CharLiteral(char),
+    NumberLiteral(String),
 }
-// TODO implement later:
-//  - unwrap string, numbers, identifers, chars,
+
+impl TokenValue {
+    pub fn literals(&self) -> Option<TokenType> {
+        match self {
+            TokenValue::Identifer(_)     => Some(TokenType::Identifier),
+            TokenValue::StringLiteral(_) => Some(TokenType::StringLiteral),
+            TokenValue::CharLiteral(_)   => Some(TokenType::CharLiteral),
+            TokenValue::NumberLiteral(_) => Some(TokenType::NumberLiteral),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Token {
+    pub token: TokenType,
+    pub value: Option<TokenValue>,
+    pub line: u32,
+    pub column: u32,
+}
+
+impl Token {
+    // TODO implement later:
+    //  - unwrap string, numbers, identifers, chars,
+}

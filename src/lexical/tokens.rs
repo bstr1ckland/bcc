@@ -75,7 +75,7 @@ pub enum TokenType {
 
 impl TokenType {
     // Assign token type to each valid character.
-    pub fn single_chars(c: &char) -> Option<TokenType> {
+    pub fn single_chars(c: char) -> Option<TokenType> {
         match c {
             '{' => Some(TokenType::LeftBrace),
             '}' => Some(TokenType::RightBrace),
@@ -152,17 +152,17 @@ impl TokenType {
 }
 
 #[derive(Debug)]
-pub enum TokenValue {
-    Identifer(String),
-    StringLiteral(String),
+pub enum TokenValue<'a> {
+    Identifier(&'a str),
+    StringLiteral(&'a str),
     CharLiteral(char),
-    NumberLiteral(String),
+    NumberLiteral(&'a str),
 }
 
-impl TokenValue {
+impl TokenValue<'_> {
     pub fn literals(&self) -> Option<TokenType> {
         match self {
-            TokenValue::Identifer(_)     => Some(TokenType::Identifier),
+            TokenValue::Identifier(_)     => Some(TokenType::Identifier),
             TokenValue::StringLiteral(_) => Some(TokenType::StringLiteral),
             TokenValue::CharLiteral(_)   => Some(TokenType::CharLiteral),
             TokenValue::NumberLiteral(_) => Some(TokenType::NumberLiteral),
@@ -171,14 +171,14 @@ impl TokenValue {
 }
 
 #[derive(Debug)]
-pub struct Token {
+pub struct Token<'a> {
     pub token: TokenType,
-    pub value: Option<TokenValue>,
+    pub value: Option<TokenValue<'a>>,
     pub line: u32,
     pub column: u32,
 }
 
-impl Token {
+impl Token <'_> {
     // TODO implement later:
     //  - unwrap string, numbers, identifers, chars,
 }

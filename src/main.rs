@@ -5,21 +5,17 @@ mod lexical;
 use lexical::tokens::Token;
 use lexical::tokenize::tokenize;
 
-use std::env;
-use std::fs::File;
-use std::io::Read;
+use std::{env, fs};
 use std::result::Result;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+
     // Iterate through each argument for main, and read file as a byte array.
     for file in env::args().skip(1) {
-        let mut file = File::open(&file)?;
-        let mut bytes: Vec<u8> = Vec::new();
-        file.read_to_end(&mut bytes)?;
+        let file: String = fs::read_to_string(file)?;
 
-        // Tokenize byte array, 
-        // Transfer ownership of bytes since (I don't think) we need it anymore.
-        let tokens: Vec<Token> = tokenize(bytes);
+        // We can transfer ownership of file string here, don't need it again
+        let tokens: Vec<Token> = tokenize(file);
 
         // Parse tokens and generate a parse tree.
 

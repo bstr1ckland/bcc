@@ -3,20 +3,25 @@
 
 use super::tokens::{Token, TokenType};
 
-pub fn tokenize(bytes: Vec<u8>) -> Vec<Token<'static>> {
+// TODO
+// Maybe change it to Vec<String>,
+// since one String is a file, and we want
+// to compile multiple files at once
+
+pub fn tokenize(s: String) -> Vec<Token<'static>> {
     let tokens: Vec<Token> = Vec::new();
 
     let line: u32 = 1;
     let column: u32 = 1;
 
-    for char in bytes {
+    for c in s.chars() {
         // process the following:
         //      - single char tokens
         //      - keywords
         //      - numbers
         //      - identifiers
-        //      - other stuff in tokens.rs
         //      - whitespace
+        //      - other stuff in tokens.rs
     }
 
     tokens

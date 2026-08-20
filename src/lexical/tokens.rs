@@ -1,7 +1,11 @@
 // bcc Ben's C Compiler for C89 (ANSI C)
 // Defining lexical token types.
 
-#[derive(Debug)]
+use std::fmt::Debug;
+use std::str::FromStr;
+use std::num::ParseIntError;
+
+#[derive(Debug, PartialEq)]
 pub enum TokenType {
     // ======================
     // General Token Types
@@ -71,6 +75,9 @@ pub enum TokenType {
     While,
     Break,
     Continue,
+
+    // Used for TokenType initialization
+    Unknown,
 }
 
 impl TokenType {
@@ -116,13 +123,6 @@ impl TokenType {
             "*=" => Some(TokenType::StarEqual),
             "==" => Some(TokenType::EqualEqual),
 
-            _ => None,
-        }
-    }
-
-    // Assign token type to each valid keyword string.
-    pub fn keywords(keyword: &str) -> Option<TokenType> {
-        match keyword {
             // Data types
             "void"     => Some(TokenType::Void),
             "int"      => Some(TokenType::Int),
@@ -146,39 +146,29 @@ impl TokenType {
             "continue" => Some(TokenType::Continue),
 
             _ => None,
-
         }
     }
 }
 
-#[derive(Debug)]
-pub enum TokenValue<'a> {
-    Identifier(&'a str),
-    StringLiteral(&'a str),
-    CharLiteral(char),
-    NumberLiteral(&'a str),
-}
-
-impl TokenValue<'_> {
-    pub fn literals(&self) -> Option<TokenType> {
-        match self {
-            TokenValue::Identifier(_)     => Some(TokenType::Identifier),
-            TokenValue::StringLiteral(_) => Some(TokenType::StringLiteral),
-            TokenValue::CharLiteral(_)   => Some(TokenType::CharLiteral),
-            TokenValue::NumberLiteral(_) => Some(TokenType::NumberLiteral),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Token<'a> {
-    pub token: TokenType,
-    pub value: Option<TokenValue<'a>>,
-    pub line: u32,
+pub struct Token {
+    pub token:  Option<TokenType>,
+    pub value:  String,
+    pub line:   u32,
     pub column: u32,
 }
 
-impl Token <'_> {
+impl Token {
+    // Should return @s, but trimmed and unwrapped.
+    pub fn convert_to_string(s: &str) -> String {
+        s.to_string() // need to add more
+    }
+
+    // Convers a string s and returns a number.
+    pub fn convert_to_number<T>(s: &str) -> Result<T, ParseIntError>
+        where T: std::str::FromStr<Err = ParseIntError> {
+        FromStr::from_str(s)
+    }
+
     // TODO implement later:
     //  - unwrap string, numbers, identifers, chars,
 }

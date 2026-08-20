@@ -1,27 +1,51 @@
 // bcc Ben's C Compiler for C89 (ANSI C)
-// Tokenizing inputs (via byte array).
+// Tokenizing inputs.
+
+use std::process::exit;
 
 use super::tokens::{Token, TokenType};
 
-// TODO
-// Maybe change it to Vec<String>,
-// since one String is a file, and we want
-// to compile multiple files at once
+pub fn tokenize(s: String) -> Vec<Token> {
+    let mut tokens: Vec<Token> = Vec::new();
 
-pub fn tokenize(s: String) -> Vec<Token<'static>> {
-    let tokens: Vec<Token> = Vec::new();
-
-    let line: u32 = 1;
-    let column: u32 = 1;
+    let mut curr_l: u32 = 0;
+    let mut curr_c: u32 = 0;
 
     for c in s.chars() {
-        // process the following:
-        //      - single char tokens
-        //      - keywords
-        //      - numbers
-        //      - identifiers
-        //      - whitespace
-        //      - other stuff in tokens.rs
+        let mut t_type= Some(TokenType::Unknown);
+
+        // Character literal
+        if c == '\'' {
+            t_type = TokenType::single_chars(c);
+        }
+
+        // String || Number literal
+        else if c == '"' {
+
+        }
+
+        // Advance to next token
+        if c == '\n' {
+            curr_l += 1;
+            curr_c = 1;
+        } else {
+            curr_c += 1;
+        }
+
+        if t_type == Some(TokenType::Unknown) {
+            println!("Error: Unknown token found {}", c);
+            exit(1);
+        }
+
+        let t = Token {
+            token:  t_type,
+            value:  c.to_string(),
+            line:   curr_l,
+            column: curr_c,
+        };
+
+        tokens.push(t);
+        
     }
 
     tokens

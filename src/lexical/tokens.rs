@@ -5,6 +5,30 @@ use std::fmt::Debug;
 use std::str::FromStr;
 use std::num::ParseIntError;
 
+pub static KEYWORDS: &[&str] = &[
+    // types
+    "void",
+    "int",
+    "char",
+    "float",
+    "double",
+    "short",
+    "long",
+    "signed",
+    "unsigned",
+    "const",
+
+    // control flow
+    "if",
+    "else",
+    "switch",
+    "return",
+    "for",
+    "while",
+    "break",
+    "continue",
+];
+
 #[derive(Debug, PartialEq)]
 pub enum TokenType {
     // ======================

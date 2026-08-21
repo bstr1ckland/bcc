@@ -1,5 +1,5 @@
-// bcc Ben's C Compiler for C89 (ANSI C)
-// Defining lexical token types.
+// bcc - Ben's C Compiler for C89 (ANSI C)
+// Defining lexical token types
 
 use std::fmt::Debug;
 use std::str::FromStr;

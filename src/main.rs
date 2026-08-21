@@ -1,15 +1,14 @@
-// bcc Ben's C Compiler for C89 (ANSI C)
+// bcc - Ben's C Compiler for C89 (ANSI C)
 
 mod lexical;
 
-use lexical::tokens::Token;
 use lexical::tokenize::tokenize;
+use lexical::tokens::Token;
 
-use std::{env, fs};
 use std::result::Result;
+use std::{env, fs};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     // Iterate through each argument for main, and read file as a byte array.
     for file in env::args().skip(1) {
         let file: String = fs::read_to_string(file)?;

@@ -1,20 +1,20 @@
-// bcc Ben's C Compiler for C89 (ANSI C)
-// Tokenizing inputs.
+// bcc - Ben's C Compiler for C89 (ANSI C)
+// Tokenizing inputs
 
 use std::process::exit;
 
-use super::tokens::{Token, TokenType, KEYWORDS};
+use super::tokens::{ Token, TokenType, KEYWORDS };
 
 pub fn tokenize(s: String) -> Vec<Token> {
     let mut tokens: Vec<Token> = Vec::new();
+    let mut chars = s.chars();
 
     let mut curr_l: u32 = 0; // line
     let mut curr_c: u32 = 0; // column
 
-    let mut chars = s.chars();
-
+    // Iterate through chars
     while let Some(c) = chars.next() {
-        let mut t_type= Some(TokenType::Unknown);
+        let mut t_type = Some(TokenType::Unknown);
         let mut value = "".to_string();
 
         // Character literal, ex: 'c'

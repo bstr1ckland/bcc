@@ -6,8 +6,12 @@ use std::process::exit;
 use super::tokens::{ Token, TokenType, KEYWORDS };
 
 pub fn tokenize(s: String) -> Vec<Token> {
-    let mut tokens: Vec<Token> = Vec::new();
+    // Returned at end of method
+    let mut tokens: Vec<Token> = Vec::new(); 
+    // File (Function param) as array of chars
     let mut chars = s.chars();
+    // Peekable array of chars, allows peeking at next char in iteration
+    let peekable = chars.clone().peekable();
 
     let mut curr_l: u32 = 0; // line
     let mut curr_c: u32 = 0; // column
@@ -15,34 +19,60 @@ pub fn tokenize(s: String) -> Vec<Token> {
     // Iterate through chars
     while let Some(c) = chars.next() {
         let mut t_type = Some(TokenType::Unknown);
-        let mut value = "".to_string();
+        let mut val = "".to_string();
+
+        // Handle single && mutli char tokens
+
 
         // Character literal, ex: 'c'
         if c == '\'' {
-            t_type = TokenType::single_chars(c);
-            value = c.to_string();
+            val = c.to_string();
+
+            // THIS IS IMPLEMENTED WRONG.
+            // NEED TO MOVE TO NEXT CHAR,
+            // ADD THAT TO VAL
+            // AND ADD THE OTHER ' TOO.
+
+            // WILL GET UNWRAPPED LATER
+            t_type = Some(TokenType::CharLiteral);
         }
 
         // String || Number literal, ex: "hello"
         else if c == '"' {
-            // store a string
+            // Will unwrap string later
+            val.push(c);
+            while let Some(next_c) = chars.next() {
+                if c == '"' {
+                    break;
+                }
+                curr_c += 1;
+                val.push(next_c);
+            }
+
+            // Check if value is numeric, 
+            // otherwise it is string literal
+            if val.parse::<f64>().is_ok() {
+                t_type = Some(TokenType::NumberLiteral);
+            } else {
+                t_type = Some(TokenType::StringLiteral);
+            }
         }
 
         // Keywords and identifiers
         else if c.is_alphabetic() {
             // Build the rest of the found word
-            value.push(c);
+            val.push(c);
             while let Some(next_c) = chars.next() {
                 if c.is_whitespace() {
                     break;
                 }
                 curr_c += 1;
-                value.push(next_c);
+                val.push(next_c);
             }
 
             // Check for keyword, else it is an identifier
-            if KEYWORDS.contains(&value.as_str()) {
-                t_type = TokenType::multi_chars(&value);
+            if KEYWORDS.contains(&val.as_str()) {
+                t_type = TokenType::multi_chars(&val);
             } else {
                 t_type = Some(TokenType::Identifier);
             }            
@@ -64,7 +94,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         let t = Token {
             token:  t_type,
-            value:  value,
+            value:  val,
             line:   curr_l,
             column: curr_c,
         };

@@ -9,9 +9,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
     // Returned at end of method
     let mut tokens: Vec<Token> = Vec::new(); 
     // File (Function param) as array of chars
-    let mut chars = s.chars();
-    // Peekable array of chars, allows peeking at next char in iteration
-    let peekable = chars.clone().peekable();
+    let mut chars = s.chars().peekable();
 
     let mut curr_l: u32 = 0; // line
     let mut curr_c: u32 = 0; // column
@@ -39,22 +37,37 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         // String || Number literal, ex: "hello"
         else if c == '"' {
-            // Will unwrap string later
             val.push(c);
             while let Some(next_c) = chars.next() {
-                if c == '"' {
+                if next_c == '"' {
                     break;
                 }
                 curr_c += 1;
                 val.push(next_c);
             }
 
-            // Check if value is numeric, 
-            // otherwise it is string literal
+            // Check if value is numeric, otherwise it is string literal
             if val.parse::<f64>().is_ok() {
                 t_type = Some(TokenType::NumberLiteral);
             } else {
                 t_type = Some(TokenType::StringLiteral);
+            }
+        }
+
+        // Symbols like => , +
+        else if is_symbol(c) {
+            // Check if next char is whitespace, 
+            // if so then don't process multiple symbols.
+            if let Some(next_c) = chars.peek() {
+                val.push(c);
+                if next_c.is_whitespace() {
+                    curr_c += 1;
+                    t_type = TokenType::single_chars(c)
+                } else {
+                    curr_c += 2;
+                    val.push(*next_c);
+                    t_type = TokenType::multi_chars(&val);
+                }
             }
         }
 
@@ -63,7 +76,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             // Build the rest of the found word
             val.push(c);
             while let Some(next_c) = chars.next() {
-                if c.is_whitespace() {
+                if next_c.is_whitespace() {
                     break;
                 }
                 curr_c += 1;
@@ -104,4 +117,11 @@ pub fn tokenize(s: String) -> Vec<Token> {
     }
 
     tokens
+}
+
+fn is_symbol(c: char) -> bool {
+    if !c.is_alphanumeric() && !c.is_whitespace() {
+        return true
+    }
+    false
 }

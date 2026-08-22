@@ -9,7 +9,7 @@ use std::result::Result;
 use std::{env, fs};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Iterate through each argument for main, and read file as a byte array.
+    // Iterate through each argument for main, and read file as a string.
     for file in env::args().skip(1) {
         let file: String = fs::read_to_string(file)?;
 

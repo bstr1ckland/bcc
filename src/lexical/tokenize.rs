@@ -9,7 +9,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
     // Returned at end of method
     let mut tokens: Vec<Token> = Vec::new(); 
     // File (Function param) as array of chars
-    let mut chars = s.chars().peekable();
+    let mut chars = s.chars();
 
     let mut curr_l: u32 = 0; // line
     let mut curr_c: u32 = 0; // column
@@ -19,19 +19,18 @@ pub fn tokenize(s: String) -> Vec<Token> {
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
 
-        // Handle single && mutli char tokens
-
-
         // Character literal, ex: 'c'
         if c == '\'' {
-            val = c.to_string();
+            val.push(c);
 
-            // THIS IS IMPLEMENTED WRONG.
-            // NEED TO MOVE TO NEXT CHAR,
-            // ADD THAT TO VAL
-            // AND ADD THE OTHER ' TOO.
-
-            // WILL GET UNWRAPPED LATER
+            if let Some(next_c) = chars.next() {
+                val.push(next_c);
+                
+                if let Some(next_next_c) = chars.next() {
+                    val.push(next_next_c);
+                }
+            }
+            curr_c += 3;
             t_type = Some(TokenType::CharLiteral);
         }
 
@@ -47,32 +46,29 @@ pub fn tokenize(s: String) -> Vec<Token> {
             }
 
             // Check if value is numeric, otherwise it is string literal
-            if val.parse::<f64>().is_ok() {
-                t_type = Some(TokenType::NumberLiteral);
-            } else {
-                t_type = Some(TokenType::StringLiteral);
-            }
+            t_type = Some(TokenType::StringLiteral);
         }
 
         // Symbols like => , +
+        // TODO: Bug here
         else if is_symbol(c) {
             // Check if next char is whitespace, 
             // if so then don't process multiple symbols.
-            if let Some(next_c) = chars.peek() {
+            if let Some(next_c) = chars.next() {
                 val.push(c);
                 if next_c.is_whitespace() {
                     curr_c += 1;
                     t_type = TokenType::single_chars(c)
                 } else {
                     curr_c += 2;
-                    val.push(*next_c);
+                    val.push(next_c);
                     t_type = TokenType::multi_chars(&val);
                 }
             }
         }
 
-        // Keywords and identifiers
-        else if c.is_alphabetic() {
+        // Keywords and identifiers , and also number literals
+        else if c.is_alphabetic() || c.is_ascii_digit() {
             // Build the rest of the found word
             val.push(c);
             while let Some(next_c) = chars.next() {
@@ -86,9 +82,20 @@ pub fn tokenize(s: String) -> Vec<Token> {
             // Check for keyword, else it is an identifier
             if KEYWORDS.contains(&val.as_str()) {
                 t_type = TokenType::multi_chars(&val);
-            } else {
+            }
+            // Check for number literal
+            else if s.parse::<f64>().is_ok() {
+                t_type = Some(TokenType::NumberLiteral);
+            }
+            else {
                 t_type = Some(TokenType::Identifier);
             }            
+        }
+
+        // Skip to next char if whitespace
+        else if c.is_whitespace() {
+            curr_c += 1;
+            continue;
         }
 
         // Update index
@@ -119,6 +126,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
     tokens
 }
 
+// Check if char isn't a letter or whitespace
 fn is_symbol(c: char) -> bool {
     if !c.is_alphanumeric() && !c.is_whitespace() {
         return true

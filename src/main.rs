@@ -16,6 +16,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // We can transfer ownership of file string here, don't need it again
         let tokens: Vec<Token> = tokenize(file);
 
+        // testing
+        for t in tokens {
+            println!("{:#?}", t);
+        }
+
         // Parse tokens and generate a parse tree.
 
         // Apply semantic rules to parse tree.

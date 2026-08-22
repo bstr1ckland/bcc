@@ -174,6 +174,7 @@ impl TokenType {
     }
 }
 
+#[derive(Debug)]
 pub struct Token {
     pub token:  Option<TokenType>,
     pub value:  String,

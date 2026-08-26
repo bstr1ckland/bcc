@@ -6,10 +6,8 @@ use std::process::exit;
 use super::tokens::{ Token, TokenType, KEYWORDS };
 
 pub fn tokenize(s: String) -> Vec<Token> {
-    // Returned at end of method
     let mut tokens: Vec<Token> = Vec::new(); 
-    // File (Function param) as array of chars
-    let mut chars = s.chars();
+    let mut chars = s.chars().peekable();
 
     let mut curr_l: u32 = 0; // line
     let mut curr_c: u32 = 0; // column
@@ -19,15 +17,27 @@ pub fn tokenize(s: String) -> Vec<Token> {
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
 
-        // Character literal, ex: 'c'
-        if c == '\'' {
-            val.push(c);
+        if c == '\n' {
+            t_type = Some(TokenType::NewLine);
+            val.push('\n');
 
+            curr_l += 1;
+            curr_c = 0;
+        }
+
+        else if c.is_whitespace() {
+            curr_c += 1;
+            continue;
+        }
+
+        // Character literal, ex: 'c'
+        else if c == '\'' {
+            val.push(c); // push opening '
             if let Some(next_c) = chars.next() {
-                val.push(next_c);
+                val.push(next_c); // push the literal
                 
                 if let Some(next_next_c) = chars.next() {
-                    val.push(next_next_c);
+                    val.push(next_next_c); // push closing ;
                 }
             }
             curr_c += 3;
@@ -50,7 +60,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
         }
 
         // Symbols like => , +
-        // TODO: Bug here
         else if is_symbol(c) {
             // Check if next char is whitespace, 
             // if so then don't process multiple symbols.
@@ -92,38 +101,29 @@ pub fn tokenize(s: String) -> Vec<Token> {
             }            
         }
 
-        // Skip to next char if whitespace
-        else if c.is_whitespace() {
-            curr_c += 1;
-            continue;
-        }
-
-        // Update index
-        if c == '\n' {
-            curr_l += 1;
-            curr_c = 1;
-        } else {
-            curr_c += 1;
-        }
-
         // Fail if token type hasn't been updated yet
         if t_type == Some(TokenType::Unknown) {
-            println!("Error: Unknown token found {}", c);
+            println!("Error: Unknown token found '{}' , at line {curr_l} , {curr_c}", c);
             exit(1);
         }
 
-        let t = Token {
+        tokens.push(Token {
             token:  t_type,
             value:  val,
             line:   curr_l,
             column: curr_c,
-        };
-
-        tokens.push(t);
+        });
         
     }
 
     tokens
+}
+
+// TODO: Implement
+// Validate identifier
+fn is_identifier(s: &str) -> bool {
+    
+    false
 }
 
 // Check if char isn't a letter or whitespace

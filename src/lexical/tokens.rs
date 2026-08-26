@@ -69,6 +69,7 @@ pub enum TokenType {
     SlashEqual,             // /=
     StarEqual,              // *=
     EqualEqual,             // ==
+    NewLine,                // \n
     Identifier,             // int x, where x is identifer
     CharLiteral,            // 'a'
     StringLiteral,          // "hello"

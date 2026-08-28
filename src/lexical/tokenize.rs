@@ -9,7 +9,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
     let mut tokens: Vec<Token> = Vec::new(); 
     let mut chars = s.chars().peekable();
 
-    let mut curr_l: u32 = 0; // line
+    let mut curr_l: u32 = 1; // line
     let mut curr_c: u32 = 0; // column
 
     // Iterate through chars
@@ -17,7 +17,14 @@ pub fn tokenize(s: String) -> Vec<Token> {
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
 
-        if c == '\n' {
+        // BUG HERE
+        // Currently, user needs to have an extra line at end of file,
+        // This token isn't even properly stored.
+        if Some(c) == None {
+            t_type = Some(TokenType::EOF);
+        }
+        
+        else if c == '\n' {
             t_type = Some(TokenType::NewLine);
             val.push('\n');
 
@@ -55,7 +62,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
                 val.push(next_c);
             }
 
-            // Check if value is numeric, otherwise it is string literal
             t_type = Some(TokenType::StringLiteral);
         }
 
@@ -76,34 +82,45 @@ pub fn tokenize(s: String) -> Vec<Token> {
             }
         }
 
-        // Keywords and identifiers , and also number literals
-        else if c.is_alphabetic() || c.is_ascii_digit() {
-            // Build the rest of the found word
+        // Number literals
+        else if c.is_numeric() {
             val.push(c);
             while let Some(next_c) = chars.next() {
-                if next_c.is_whitespace() {
+                if !next_c.is_numeric() || next_c != '.' {
                     break;
                 }
                 curr_c += 1;
                 val.push(next_c);
             }
 
-            // Check for keyword, else it is an identifier
+            if s.parse::<f64>().is_ok() {
+                t_type = Some(TokenType::NumberLiteral);
+            }
+        }
+
+        // Indentifiers & Keywords
+        else if c.is_alphabetic() || c == '_' {
+            val.push(c);
+            while let Some(next_c) = chars.next() {
+                if next_c.is_whitespace() || !next_c.is_alphabetic() || !next_c.is_numeric() {
+                    break;
+                }
+
+                curr_c += 1;
+                val.push(next_c);
+            }
+
+            if is_identifier(&s) {
+                t_type = Some(TokenType::Identifier);
+            }
             if KEYWORDS.contains(&val.as_str()) {
                 t_type = TokenType::multi_chars(&val);
             }
-            // Check for number literal
-            else if s.parse::<f64>().is_ok() {
-                t_type = Some(TokenType::NumberLiteral);
-            }
-            else {
-                t_type = Some(TokenType::Identifier);
-            }            
         }
 
         // Fail if token type hasn't been updated yet
         if t_type == Some(TokenType::Unknown) {
-            println!("Error: Unknown token found '{}' , at line {curr_l} , {curr_c}", c);
+            println!("Error: Unknown token found '{}' , at line {curr_l} , column {curr_c}.", c);
             exit(1);
         }
 
@@ -119,10 +136,15 @@ pub fn tokenize(s: String) -> Vec<Token> {
     tokens
 }
 
-// TODO: Implement
 // Validate identifier
 fn is_identifier(s: &str) -> bool {
-    
+    if s.contains('_') || s.chars().all(char::is_alphabetic) || s.chars().all(char::is_numeric) {
+        let first_c = s.chars().next().unwrap();
+        // C identifiers cannot start with a number, but can contain them
+        if !first_c.is_numeric() {
+            return true
+        }
+    }
     false
 }
 

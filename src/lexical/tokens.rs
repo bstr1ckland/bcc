@@ -100,6 +100,7 @@ pub enum TokenType {
     While,
     Break,
     Continue,
+    EOF,
 
     // Used for TokenType initialization
     Unknown,

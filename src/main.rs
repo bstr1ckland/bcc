@@ -5,11 +5,18 @@ mod lexical;
 use lexical::tokenize::tokenize;
 use lexical::tokens::Token;
 
+use std::env;
+use std::fs;
 use std::result::Result;
-use std::{env, fs};
-
+use std::process::exit;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Iterate through each argument for main, and read file as a string.
+
+    if env::args().len() < 2 {
+        println!("Error: Please supply C file(s) to compile.");
+        exit(1);
+    }
+
     for file in env::args().skip(1) {
         let file: String = fs::read_to_string(file)?;
 

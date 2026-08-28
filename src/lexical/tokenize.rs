@@ -10,12 +10,16 @@ pub fn tokenize(s: String) -> Vec<Token> {
     let mut chars = s.chars().peekable();
 
     let mut curr_l: u32 = 1; // line
-    let mut curr_c: u32 = 0; // column
+    let mut curr_c: u32 = 1; // column
 
-    // Iterate through chars
     while let Some(c) = chars.next() {
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
+
+        // TODO: Probably rename next_c instances to something like c_iter
+        //       or something like that
+
+        // also rename curr_c and curr_l
 
         // BUG HERE
         // Currently, user needs to have an extra line at end of file,
@@ -39,6 +43,8 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         // Character literal, ex: 'c'
         else if c == '\'' {
+            curr_c += 1;
+
             val.push(c); // push opening '
             if let Some(next_c) = chars.next() {
                 val.push(next_c); // push the literal
@@ -47,13 +53,15 @@ pub fn tokenize(s: String) -> Vec<Token> {
                     val.push(next_next_c); // push closing ;
                 }
             }
-            curr_c += 3;
+            curr_c += 2;
             t_type = Some(TokenType::CharLiteral);
         }
 
         // String || Number literal, ex: "hello"
         else if c == '"' {
             val.push(c);
+            curr_c += 1;
+
             while let Some(next_c) = chars.next() {
                 if next_c == '"' {
                     break;
@@ -65,17 +73,22 @@ pub fn tokenize(s: String) -> Vec<Token> {
             t_type = Some(TokenType::StringLiteral);
         }
 
-        // Symbols like => , +
+        // Symbols like =, > , +
         else if is_symbol(c) {
-            // Check if next char is whitespace, 
-            // if so then don't process multiple symbols.
+            val.push(c);
+            curr_c += 1;
+
             if let Some(next_c) = chars.next() {
-                val.push(c);
                 if next_c.is_whitespace() {
+                    t_type = TokenType::single_chars(c);
+                }
+                // bug here
+                // maybe we need to try something like if multi_chars == None,
+                // process one by one
+
+                // because () is getting through, ) gets tokenized but ( doens't
+                else if is_symbol(next_c) {
                     curr_c += 1;
-                    t_type = TokenType::single_chars(c)
-                } else {
-                    curr_c += 2;
                     val.push(next_c);
                     t_type = TokenType::multi_chars(&val);
                 }
@@ -85,6 +98,8 @@ pub fn tokenize(s: String) -> Vec<Token> {
         // Number literals
         else if c.is_numeric() {
             val.push(c);
+            curr_c += 1;
+
             while let Some(next_c) = chars.next() {
                 if !next_c.is_numeric() || next_c != '.' {
                     break;
@@ -93,16 +108,17 @@ pub fn tokenize(s: String) -> Vec<Token> {
                 val.push(next_c);
             }
 
-            if s.parse::<f64>().is_ok() {
+            if val.parse::<f64>().is_ok() {
                 t_type = Some(TokenType::NumberLiteral);
             }
         }
 
-        // Indentifiers & Keywords
+        // Identifiers
         else if c.is_alphabetic() || c == '_' {
             val.push(c);
+            curr_c += 1;
             while let Some(next_c) = chars.next() {
-                if next_c.is_whitespace() || !next_c.is_alphabetic() || !next_c.is_numeric() {
+                if next_c.is_whitespace() || is_symbol(next_c) {
                     break;
                 }
 
@@ -110,7 +126,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
                 val.push(next_c);
             }
 
-            if is_identifier(&s) {
+            if is_identifier(&val) {
                 t_type = Some(TokenType::Identifier);
             }
             if KEYWORDS.contains(&val.as_str()) {

@@ -16,13 +16,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
 
-        // TODO: Probably rename next_c instances to something like c_iter
-        //       or something like that
-
-        // TODO: Change entire program to use .peek()
-
-        // also rename curr_c and curr_l
-
         if Some(c).is_none() {
             t_type = Some(TokenType::EOF);
         }
@@ -30,7 +23,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
         else if c == '\n' {
             t_type = Some(TokenType::NewLine);
             val.push('\n');
-
             curr_l += 1;
             curr_c = 0;
         }
@@ -54,7 +46,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             t_type = Some(TokenType::CharLiteral);
         }
 
-        // String || Number literal, ex: "hello"
+        // String literal, ex: "hello"
         else if c == '"' {
             val.push(c);
             curr_c += 1;
@@ -75,46 +67,45 @@ pub fn tokenize(s: String) -> Vec<Token> {
             val.push(c);
             curr_c += 1;
 
-            // What needs to happen, is that we need to first determine the token of the single char.
-            // Then we need to peek next, and see if there is a next char.
-            // We'll evaluate that and see if it procudes a valid token.
-            // If it does, great! Otherwise, use the produced single token above.
+            let mut has_next_char = true;
 
-            let mut has_next_char = false;
-            let mut temp = val.clone();
+            // Check the char after the current in case it's a possible -
+            // multi char combo token
+            if let Some(peek_c) = chars.peek() {
+                if is_symbol(*peek_c) {
+                    let mut temp = val.clone();
+                    temp.push(*peek_c);
 
-            if let Some(next_c) = chars.peek() {
-                if *next_c == '\n' {
-                    // TODO: Wrap this logic in a function
-                    curr_l += 1;
-                    curr_c = 0;
-                    continue;
-                }
-                else if next_c.is_whitespace() {
-                    continue;
-                }
-                else if is_symbol(*next_c) {
-                    // See if the current char + peeked char = a valid token type
-                    temp.push(*next_c);
+                    // See if we get a valid token with the combo of two chars
                     t_type = TokenType::multi_chars(&temp);
-
                     if t_type == Some(TokenType::Unknown) {
+                        has_next_char = false;
                         t_type = TokenType::single_chars(c);
                     }
-                    else {
-                        has_next_char = true;
-                    }
                 }
-
+                else if *peek_c == '\n' {
+                    has_next_char = false;
+                    curr_l += 1;
+                    curr_c = 1;
+                    t_type = Some(TokenType::NewLine);
+                }
+                else if peek_c.is_whitespace() {
+                    has_next_char = false;
+                    t_type = TokenType::single_chars(c);
+                }
             }
+            // No next char to process, must be a single char
             else {
+                has_next_char = false;
                 t_type = TokenType::single_chars(c);
             }
 
-            if has_next_char && let Some(next_next_c) = chars.next() {
-                curr_c += 1;
-                val.push(next_next_c);
-                t_type = TokenType::multi_chars(&val);
+            if has_next_char {
+                if let Some(next_c) = chars.next() {
+                    val.push(next_c);
+                    t_type = TokenType::multi_chars(&val);
+                    curr_c += 1;
+                }
             }
         }
 
@@ -137,7 +128,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
         }
 
         // TODO: Bugs here.
-        // TODO: Problem is that ( is iterated here. We need to check for something like .peek() instead
         // Identifiers & Keywords
         else if c.is_alphabetic() || c == '_' {
             val.push(c);

@@ -46,6 +46,30 @@ pub fn tokenize(s: String) -> Vec<Token> {
             t_type = Some(TokenType::CharLiteral);
         }
 
+        // Identifiers & Keywords
+        else if c.is_alphabetic() || c == '_' {
+            val.push(c);
+            curr_c += 1;
+
+            while let Some(peek_c) = chars.peek() {
+                if peek_c.is_whitespace() || is_symbol(*peek_c) {
+                    break;
+                }
+
+                if let Some(next_c) = chars.next() {
+                    val.push(next_c);
+                    curr_c += 1;
+                }
+            }
+
+            if is_identifier(&val) {
+                t_type = Some(TokenType::Identifier);
+            }
+            if KEYWORDS.contains(&val.as_str()) {
+                t_type = TokenType::multi_chars(&val);
+            }
+        }
+
         // String literal, ex: "hello"
         else if c == '"' {
             val.push(c);
@@ -124,32 +148,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
             if val.parse::<f64>().is_ok() {
                 t_type = Some(TokenType::NumberLiteral);
-            }
-        }
-
-        // TODO: Bugs here.
-        // Identifiers & Keywords
-        else if c.is_alphabetic() || c == '_' {
-            val.push(c);
-            curr_c += 1;
-
-            while let Some(next_c) = chars.next() {
-                // Character ahead of next_c
-                if let Some(peek_c) = chars.peek() {
-                    if peek_c.is_whitespace() || is_symbol(*peek_c) {
-                        break;
-                    }
-
-                    curr_c += 1;
-                    val.push(next_c);
-                }
-            }
-
-            if is_identifier(&val) {
-                t_type = Some(TokenType::Identifier);
-            }
-            if KEYWORDS.contains(&val.as_str()) {
-                t_type = TokenType::multi_chars(&val);
             }
         }
 

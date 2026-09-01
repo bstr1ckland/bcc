@@ -132,7 +132,7 @@ impl TokenType {
             '<' => Some(TokenType::LessThan),
             '|' => Some(TokenType::Pipe),
 
-            _ => None,
+            _ => Some(TokenType::Unknown),
         }
     }
 
@@ -171,7 +171,7 @@ impl TokenType {
             "break"    => Some(TokenType::Break),
             "continue" => Some(TokenType::Continue),
 
-            _ => None,
+            _ => Some(TokenType::Unknown),
         }
     }
 }

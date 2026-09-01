@@ -19,12 +19,11 @@ pub fn tokenize(s: String) -> Vec<Token> {
         // TODO: Probably rename next_c instances to something like c_iter
         //       or something like that
 
+        // TODO: Change entire program to use .peek()
+
         // also rename curr_c and curr_l
 
-        // BUG HERE
-        // Currently, user needs to have an extra line at end of file,
-        // This token isn't even properly stored.
-        if Some(c) == None {
+        if Some(c).is_none() {
             t_type = Some(TokenType::EOF);
         }
         
@@ -43,8 +42,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         // Character literal, ex: 'c'
         else if c == '\'' {
-            curr_c += 1;
-
             val.push(c); // push opening '
             if let Some(next_c) = chars.next() {
                 val.push(next_c); // push the literal
@@ -53,7 +50,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
                     val.push(next_next_c); // push closing ;
                 }
             }
-            curr_c += 2;
+            curr_c += 3;
             t_type = Some(TokenType::CharLiteral);
         }
 
@@ -78,20 +75,46 @@ pub fn tokenize(s: String) -> Vec<Token> {
             val.push(c);
             curr_c += 1;
 
-            if let Some(next_c) = chars.next() {
-                if next_c.is_whitespace() {
-                    t_type = TokenType::single_chars(c);
-                }
-                // bug here
-                // maybe we need to try something like if multi_chars == None,
-                // process one by one
+            // What needs to happen, is that we need to first determine the token of the single char.
+            // Then we need to peek next, and see if there is a next char.
+            // We'll evaluate that and see if it procudes a valid token.
+            // If it does, great! Otherwise, use the produced single token above.
 
-                // because () is getting through, ) gets tokenized but ( doens't
-                else if is_symbol(next_c) {
-                    curr_c += 1;
-                    val.push(next_c);
-                    t_type = TokenType::multi_chars(&val);
+            let mut has_next_char = false;
+            let mut temp = val.clone();
+
+            if let Some(next_c) = chars.peek() {
+                if *next_c == '\n' {
+                    // TODO: Wrap this logic in a function
+                    curr_l += 1;
+                    curr_c = 0;
+                    continue;
                 }
+                else if next_c.is_whitespace() {
+                    continue;
+                }
+                else if is_symbol(*next_c) {
+                    // See if the current char + peeked char = a valid token type
+                    temp.push(*next_c);
+                    t_type = TokenType::multi_chars(&temp);
+
+                    if t_type == Some(TokenType::Unknown) {
+                        t_type = TokenType::single_chars(c);
+                    }
+                    else {
+                        has_next_char = true;
+                    }
+                }
+
+            }
+            else {
+                t_type = TokenType::single_chars(c);
+            }
+
+            if has_next_char && let Some(next_next_c) = chars.next() {
+                curr_c += 1;
+                val.push(next_next_c);
+                t_type = TokenType::multi_chars(&val);
             }
         }
 
@@ -113,17 +136,23 @@ pub fn tokenize(s: String) -> Vec<Token> {
             }
         }
 
-        // Identifiers
+        // TODO: Bugs here.
+        // TODO: Problem is that ( is iterated here. We need to check for something like .peek() instead
+        // Identifiers & Keywords
         else if c.is_alphabetic() || c == '_' {
             val.push(c);
             curr_c += 1;
-            while let Some(next_c) = chars.next() {
-                if next_c.is_whitespace() || is_symbol(next_c) {
-                    break;
-                }
 
-                curr_c += 1;
-                val.push(next_c);
+            while let Some(next_c) = chars.next() {
+                // Character ahead of next_c
+                if let Some(peek_c) = chars.peek() {
+                    if peek_c.is_whitespace() || is_symbol(*peek_c) {
+                        break;
+                    }
+
+                    curr_c += 1;
+                    val.push(next_c);
+                }
             }
 
             if is_identifier(&val) {

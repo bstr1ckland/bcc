@@ -190,12 +190,12 @@ impl Token {
         s.to_string() // need to add more
     }
 
-    // Convers a string s and returns a number.
+    // Converts a string s and returns a number.
     pub fn convert_to_number<T>(s: &str) -> Result<T, ParseIntError>
         where T: std::str::FromStr<Err = ParseIntError> {
         FromStr::from_str(s)
     }
 
     // TODO implement later:
-    //  - unwrap string, numbers, identifers, chars,
+    //  - unwrap string, numbers, identifiers, chars,
 }

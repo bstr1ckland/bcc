@@ -1,7 +1,2 @@
-int main() {
-
-
-    char _b='a';
-
-    return 0;
-}
+int x = 2.45;
+int y = 0x45;

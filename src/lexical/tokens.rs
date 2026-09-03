@@ -69,8 +69,11 @@ pub enum TokenType {
     SlashEqual,             // /=
     StarEqual,              // *=
     EqualEqual,             // ==
+    NotEqual,               // !=
+
     NewLine,                // \n
-    Identifier,             // int x, where x is identifer
+
+    Identifier,             // int x, where x is identifier
     CharLiteral,            // 'a'
     StringLiteral,          // "hello"
     NumberLiteral,          // 3.14
@@ -100,10 +103,13 @@ pub enum TokenType {
     While,
     Break,
     Continue,
-    EOF,
 
     // Used for TokenType initialization
     Unknown,
+    
+    // Value here is the library
+    Include(String), // TODO: Figure out how to acutally implement this.
+    // Maybe we need to store #include< , library, and > seperately?
 }
 
 impl TokenType {
@@ -148,6 +154,7 @@ impl TokenType {
             "/=" => Some(TokenType::SlashEqual),
             "*=" => Some(TokenType::StarEqual),
             "==" => Some(TokenType::EqualEqual),
+            "!=" => Some(TokenType::NotEqual),
 
             // Data types
             "void"     => Some(TokenType::Void),

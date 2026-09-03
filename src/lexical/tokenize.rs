@@ -96,8 +96,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             let mut is_hex = false;
 
             while let Some(peek_c) = chars.peek() {
-                // Hex number
-                if c == '0' && *peek_c == 'x' {
+                if c == '0' && *peek_c == 'x' { // Hex number
                     // Push 'x' into val
                     if let Some(next_c) = chars.next() {
                         val.push(next_c);
@@ -105,17 +104,15 @@ pub fn tokenize(s: String) -> Vec<Token> {
                         is_hex = true;
                     }
                 }
-
-                // Normal number
-                else if peek_c.is_numeric() {
+                else if peek_c.is_numeric() { // Integer number
                     if let Some(next_c) = chars.next() {
                         val.push(next_c);
                         curr_column += 1;
                     }
                 }
-                // Floating point num
-                else if *peek_c == '.' && decimal_count == 0 {
+                else if *peek_c == '.' && decimal_count == 0 { // Floating point num
                     decimal_count += 1;
+
                     // Push '.' and remaining nums
                     if let Some(next_c) = chars.next() {
                         val.push(next_c);
@@ -133,7 +130,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
                         }
                     }
                 }
-
                 // Invalid numerical character
                 else {
                     break;
@@ -166,6 +162,11 @@ pub fn tokenize(s: String) -> Vec<Token> {
             }
         }
 
+        // #include<>
+        else if c == '#' {
+
+        }
+
         // Symbols like =, > , +
         else if is_symbol(c) {
             val.push(c);
@@ -191,19 +192,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
                     t_type = TokenType::single_chars(c);
                     has_next_char = false;
                 }
-                // Code below could be useful, but try testing new snippet above.
-                /*
-                else if *peek_c == '\n' {
-                    has_next_char = false;
-                    curr_line += 1;
-                    curr_column = 1;
-                    t_type = Some(TokenType::NewLine);
-                }
-                else if peek_c.is_whitespace() {
-                    has_next_char = false;
-                    t_type = TokenType::single_chars(c);
-                }
-                */
             }
             // No next char to process, must be a single char
             else {

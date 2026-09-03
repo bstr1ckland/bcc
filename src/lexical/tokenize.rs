@@ -87,60 +87,6 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         }
 
-        // Symbols like =, > , +
-        else if is_symbol(c) {
-            val.push(c);
-            curr_column += 1;
-
-            let mut has_next_char = true;
-
-            // Check the char after the current in case it's a possible -
-            // multi char combo token
-            if let Some(peek_c) = chars.peek() {
-                if is_symbol(*peek_c) {
-                    let mut temp = val.clone();
-                    temp.push(*peek_c);
-
-                    // See if we get a valid token with the combo of two chars
-                    t_type = TokenType::multi_chars(&temp);
-                    if t_type == Some(TokenType::Unknown) {
-                        has_next_char = false;
-                        t_type = TokenType::single_chars(c);
-                    }
-                }
-                else {
-                    t_type = TokenType::single_chars(c);
-                    has_next_char = false;
-                }
-                // Code below could be useful, but try testing new snippet above.
-                /*
-                else if *peek_c == '\n' {
-                    has_next_char = false;
-                    curr_line += 1;
-                    curr_column = 1;
-                    t_type = Some(TokenType::NewLine);
-                }
-                else if peek_c.is_whitespace() {
-                    has_next_char = false;
-                    t_type = TokenType::single_chars(c);
-                }
-                */
-            }
-            // No next char to process, must be a single char
-            else {
-                has_next_char = false;
-                t_type = TokenType::single_chars(c);
-            }
-
-            if has_next_char {
-                if let Some(next_c) = chars.next() {
-                    val.push(next_c);
-                    t_type = TokenType::multi_chars(&val);
-                    curr_column += 1;
-                }
-            }
-        }
-
         // Number literals
         else if c.is_numeric() || c == '-' {
             val.push(c);
@@ -217,6 +163,60 @@ pub fn tokenize(s: String) -> Vec<Token> {
             // Parse hex number
             else if i64::from_str_radix(&val.strip_prefix("0x").unwrap(), 16).is_ok() {
                 t_type = Some(TokenType::NumberLiteral);
+            }
+        }
+
+        // Symbols like =, > , +
+        else if is_symbol(c) {
+            val.push(c);
+            curr_column += 1;
+
+            let mut has_next_char = true;
+
+            // Check the char after the current in case it's a possible -
+            // multi char combo token
+            if let Some(peek_c) = chars.peek() {
+                if is_symbol(*peek_c) {
+                    let mut temp = val.clone();
+                    temp.push(*peek_c);
+
+                    // See if we get a valid token with the combo of two chars
+                    t_type = TokenType::multi_chars(&temp);
+                    if t_type == Some(TokenType::Unknown) {
+                        has_next_char = false;
+                        t_type = TokenType::single_chars(c);
+                    }
+                }
+                else {
+                    t_type = TokenType::single_chars(c);
+                    has_next_char = false;
+                }
+                // Code below could be useful, but try testing new snippet above.
+                /*
+                else if *peek_c == '\n' {
+                    has_next_char = false;
+                    curr_line += 1;
+                    curr_column = 1;
+                    t_type = Some(TokenType::NewLine);
+                }
+                else if peek_c.is_whitespace() {
+                    has_next_char = false;
+                    t_type = TokenType::single_chars(c);
+                }
+                */
+            }
+            // No next char to process, must be a single char
+            else {
+                has_next_char = false;
+                t_type = TokenType::single_chars(c);
+            }
+
+            if has_next_char {
+                if let Some(next_c) = chars.next() {
+                    val.push(next_c);
+                    t_type = TokenType::multi_chars(&val);
+                    curr_column += 1;
+                }
             }
         }
 

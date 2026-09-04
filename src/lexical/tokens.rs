@@ -198,9 +198,27 @@ impl Token {
     }
 
     // Converts a string s and returns a number.
-    pub fn convert_to_number<T>(s: &str) -> Result<T, ParseIntError>
-        where T: std::str::FromStr<Err = ParseIntError> {
+    pub fn convert_to_number<T>(s: &str) -> Result<T, ParseIntError> where T: std::str::FromStr<Err = ParseIntError> {
         FromStr::from_str(s)
+    }
+
+    pub fn is_symbol(c: char) -> bool {
+        if !c.is_alphanumeric() && !c.is_whitespace() {
+            return true
+        }
+        false
+    }
+
+    // Validate identifier - TODO: Implement self.value for this
+    pub fn is_identifier(s: &str) -> bool {
+        if s.contains('_') || s.chars().all(char::is_alphabetic) || s.chars().all(char::is_numeric) {
+            let first_c = s.chars().next().unwrap();
+            // C identifiers cannot start with a number, but can contain them
+            if !first_c.is_numeric() {
+                return true
+            }
+        }
+        false
     }
 
     // TODO implement later:

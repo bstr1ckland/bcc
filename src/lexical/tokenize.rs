@@ -2,11 +2,10 @@
 // Tokenizing inputs
 
 use std::process::exit;
-use crate::lexical::tokens::TokenType::Percent;
 use super::tokens::{Token, TokenType, KEYWORDS };
 
 pub fn tokenize(s: String) -> Vec<Token> {
-    let mut tokens: Vec<Token> = Vec::new(); 
+    let mut tokens: Vec<Token> = Vec::new();
     let mut chars = s.chars().peekable();
 
     let mut curr_line: u32 = 1;
@@ -15,7 +14,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
     while let Some(c) = chars.next() {
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
-        
+
         if c == '\n' {
             t_type = Some(TokenType::NewLine);
             val.push('\n');
@@ -33,7 +32,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             val.push(c); // push opening '
             if let Some(next_c) = chars.next() {
                 val.push(next_c); // push the literal
-                
+
                 if let Some(next_next_c) = chars.next() {
                     val.push(next_next_c); // push closing ;
                 }
@@ -48,7 +47,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             curr_column += 1;
 
             while let Some(peek_c) = chars.peek() {
-                if peek_c.is_whitespace() || is_symbol(*peek_c) {
+                if peek_c.is_whitespace() || Token::is_symbol(*peek_c) {
                     break;
                 }
 
@@ -58,7 +57,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
                 }
             }
 
-            if is_identifier(&val) {
+            if Token::is_identifier(&val) {
                 t_type = Some(TokenType::Identifier);
             }
             if KEYWORDS.contains(&val.as_str()) {
@@ -164,11 +163,11 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         // #include<>
         else if c == '#' {
-
+            
         }
 
         // Symbols like =, > , +
-        else if is_symbol(c) {
+        else if Token::is_symbol(c) {
             val.push(c);
             curr_column += 1;
 
@@ -177,7 +176,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             // Check the char after the current in case it's a possible -
             // multi char combo token
             if let Some(peek_c) = chars.peek() {
-                if is_symbol(*peek_c) {
+                if Token::is_symbol(*peek_c) {
                     let mut temp = val.clone();
                     temp.push(*peek_c);
 
@@ -221,28 +220,43 @@ pub fn tokenize(s: String) -> Vec<Token> {
             line:   curr_line,
             column: curr_column,
         });
-        
+
     }
 
     tokens
 }
 
-// Validate identifier
-fn is_identifier(s: &str) -> bool {
-    if s.contains('_') || s.chars().all(char::is_alphabetic) || s.chars().all(char::is_numeric) {
-        let first_c = s.chars().next().unwrap();
-        // C identifiers cannot start with a number, but can contain them
-        if !first_c.is_numeric() {
-            return true
-        }
-    }
-    false
+// Advance iteration
+fn advance() {
+    
 }
 
-// Check if char isn't a letter or whitespace
-fn is_symbol(c: char) -> bool {
-    if !c.is_alphanumeric() && !c.is_whitespace() {
-        return true
-    }
-    false
+// ex. 'a'
+fn tokenize_char_literals() {
+    
+}
+
+// ex. "hello"
+fn tokenize_string_literals() {
+    
+}
+
+// Keywords and identifiers
+fn tokenize_words() {
+    
+}
+
+// ex. + , = , =>
+fn tokenize_symbols() {
+    
+}
+
+// ex. 0xF6 , -123.4
+fn tokenize_numbers() {
+    
+}
+
+// ex. #include<stdio.h>
+fn tokenize_libraries() {
+    
 }

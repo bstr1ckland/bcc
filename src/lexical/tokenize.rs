@@ -1,7 +1,9 @@
 // bcc - Ben's C Compiler for C89 (ANSI C)
 // Tokenizing inputs
 
+use std::iter::Peekable;
 use std::process::exit;
+use std::str::Chars;
 use super::tokens::{Token, TokenType, KEYWORDS };
 
 pub fn tokenize(s: String) -> Vec<Token> {
@@ -12,6 +14,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
     let mut curr_column: u32 = 1;
 
     while let Some(c) = chars.next() {
+        // Initializing variables that get updated later
         let mut t_type = Some(TokenType::Unknown);
         let mut val = "".to_string();
 
@@ -19,7 +22,7 @@ pub fn tokenize(s: String) -> Vec<Token> {
             t_type = Some(TokenType::NewLine);
             val.push('\n');
             curr_line += 1;
-            curr_column = 0;
+            curr_column = 1;
         }
 
         else if c.is_whitespace() {
@@ -29,33 +32,13 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         // Character literal, ex: 'c'
         else if c == '\'' {
-            val.push(c); // push opening '
-            if let Some(next_c) = chars.next() {
-                val.push(next_c); // push the literal
-
-                if let Some(next_next_c) = chars.next() {
-                    val.push(next_next_c); // push closing ;
-                }
-            }
-            curr_column += 3;
+            tokenize_char_literals(&c, &mut chars, &mut val, &mut curr_column);
             t_type = Some(TokenType::CharLiteral);
         }
 
         // Identifiers & Keywords
         else if c.is_alphabetic() || c == '_' {
-            val.push(c);
-            curr_column += 1;
-
-            while let Some(peek_c) = chars.peek() {
-                if peek_c.is_whitespace() || Token::is_symbol(*peek_c) {
-                    break;
-                }
-
-                if let Some(next_c) = chars.next() {
-                    val.push(next_c);
-                    curr_column += 1;
-                }
-            }
+            tokenize_words(&c, &mut chars, &mut val, &mut curr_column);
 
             if Token::is_identifier(&val) {
                 t_type = Some(TokenType::Identifier);
@@ -67,150 +50,37 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
         // String literal, ex: "hello"
         else if c == '"' {
-            val.push(c);
-            curr_column += 1;
-
-            while let Some(next_c) = chars.next() {
-                if next_c == '"' {
-                    break;
-                }
-                curr_column += 1;
-                val.push(next_c);
-            }
-
+            tokenize_string_literals(&c, &mut chars, &mut val, &mut curr_column);
             t_type = Some(TokenType::StringLiteral);
         }
 
         // Handle comments, C89 only supports /* */.
         else if c == '/' {
-
+            // TODO: Implement
         }
 
         // Number literals
-        else if c.is_numeric() || c == '-' {
-            val.push(c);
-            curr_column += 1;
+        else if c.is_numeric() {
+            tokenize_numbers(&c, &mut chars, &mut val, &mut curr_column);
 
-            let mut decimal_count = 0;
-            let mut is_hex = false;
-
-            while let Some(peek_c) = chars.peek() {
-                if c == '0' && *peek_c == 'x' { // Hex number
-                    // Push 'x' into val
-                    if let Some(next_c) = chars.next() {
-                        val.push(next_c);
-                        curr_column += 1;
-                        is_hex = true;
-                    }
-                }
-                else if peek_c.is_numeric() { // Integer number
-                    if let Some(next_c) = chars.next() {
-                        val.push(next_c);
-                        curr_column += 1;
-                    }
-                }
-                else if *peek_c == '.' && decimal_count == 0 { // Floating point num
-                    decimal_count += 1;
-
-                    // Push '.' and remaining nums
-                    if let Some(next_c) = chars.next() {
-                        val.push(next_c);
-                        curr_column += 1;
-                        while let Some(peek_c) = chars.peek() {
-                            if peek_c.is_numeric() {
-                                if let Some(next_c) = chars.next() {
-                                    val.push(next_c);
-                                    curr_column += 1;
-                                }
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                    }
-                }
-                // Invalid numerical character
-                else {
-                    break;
-                }
-
-                // Process hex number. Special case because it can contain letters
-                if is_hex {
-                    while let Some(peek_c) = chars.peek() {
-                        // TODO: Implement hex number constraints
-                        if peek_c.is_alphabetic() || peek_c.is_numeric() {
-                            if let Some(next_c) = chars.next() {
-                                val.push(next_c);
-                                curr_column += 1;
-                            }
-                        }
-                        else {
-                            is_hex = false;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if val.parse::<f64>().is_ok() {
-                t_type = Some(TokenType::NumberLiteral);
-            }
-            // Parse hex number
-            else if i64::from_str_radix(&val.strip_prefix("0x").unwrap(), 16).is_ok() {
+            if val.parse::<f64>().is_ok() || i64::from_str_radix(&val.strip_prefix("0x").unwrap(), 16).is_ok() {
                 t_type = Some(TokenType::NumberLiteral);
             }
         }
 
         // #include<>
         else if c == '#' {
-            
+            // TODO: Implement
         }
 
         // Symbols like =, > , +
-        else if Token::is_symbol(c) {
-            val.push(c);
-            curr_column += 1;
-
-            let mut has_next_char = true;
-
-            // Check the char after the current in case it's a possible -
-            // multi char combo token
-            if let Some(peek_c) = chars.peek() {
-                if Token::is_symbol(*peek_c) {
-                    let mut temp = val.clone();
-                    temp.push(*peek_c);
-
-                    // See if we get a valid token with the combo of two chars
-                    t_type = TokenType::multi_chars(&temp);
-                    if t_type == Some(TokenType::Unknown) {
-                        has_next_char = false;
-                        t_type = TokenType::single_chars(c);
-                    }
-                }
-                else {
-                    t_type = TokenType::single_chars(c);
-                    has_next_char = false;
-                }
-            }
-            // No next char to process, must be a single char
-            else {
-                has_next_char = false;
-                t_type = TokenType::single_chars(c);
-            }
-
-            if has_next_char {
-                if let Some(next_c) = chars.next() {
-                    val.push(next_c);
-                    t_type = TokenType::multi_chars(&val);
-                    curr_column += 1;
-                }
-            }
+        else if Token::is_symbol(&c) {
+            tokenize_symbols(&c, &mut chars, &mut val, &mut curr_column, &mut t_type);
         }
 
         // Fail if token type hasn't been updated yet
         if t_type == Some(TokenType::Unknown) {
-            println!("Error: Unknown token found '{}' , \
-                at line {curr_line}, column {curr_column}.", c);
+            println!("Error: Unknown token found '{}' , at line {curr_line}, column {curr_column}.", c);
             exit(1);
         }
 
@@ -226,34 +96,190 @@ pub fn tokenize(s: String) -> Vec<Token> {
     tokens
 }
 
+// TODO: Actually use this
 // Advance iteration
-fn advance() {
-    
+fn advance(c: &char, line: &mut u32, column: &mut u32) {
+    if *c == '\n' {
+        *column = 1;
+        *line += 1;
+    }
+    else {
+        *column += 1;
+    }
 }
 
-// ex. 'a'
-fn tokenize_char_literals() {
-    
+/// Tokenizes character literals.
+///
+/// todo; documentation
+///
+///
+///
+fn tokenize_char_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+    val.push(*c); // push opening '
+    if let Some(next_c) = chars.next() {
+        val.push(next_c); // push the literal
+
+        if let Some(next_next_c) = chars.next() {
+            val.push(next_next_c); // push closing ;
+        }
+    }
+    *curr_column += 3;
 }
 
-// ex. "hello"
-fn tokenize_string_literals() {
-    
+/// Tokenizes string literals.
+///
+/// todo; documentation
+///
+///
+///
+fn tokenize_string_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+    val.push(*c);
+    *curr_column += 1;
+
+    while let Some(next_c) = chars.next() {
+        if next_c == '"' {
+            break;
+        }
+        *curr_column += 1;
+        val.push(next_c);
+    }
 }
 
-// Keywords and identifiers
-fn tokenize_words() {
-    
+/// Tokenizes keywords and identifiers.
+///
+/// todo; documentation
+///
+///
+fn tokenize_words(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+    val.push(*c);
+    *curr_column += 1;
+
+    while let Some(peek_c) = chars.peek() {
+        if peek_c.is_whitespace() || Token::is_symbol(peek_c) {
+            break;
+        }
+
+        if let Some(next_c) = chars.next() {
+            val.push(next_c);
+            *curr_column += 1;
+        }
+    }
 }
 
-// ex. + , = , =>
-fn tokenize_symbols() {
-    
+/// Tokenizes symbols.
+///
+///
+/// todo; documentation
+///
+///
+fn tokenize_symbols(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut Option<TokenType>) {
+    val.push(*c);
+    *curr_column += 1;
+
+    let mut has_next_char = true;
+
+    // Check the char after the current in case it's a possible -
+    // multi char combo token
+    if let Some(peek_c) = chars.peek() {
+        if Token::is_symbol(peek_c) {
+            let mut temp = val.clone();
+            temp.push(*peek_c);
+
+            // See if we get a valid token with the combo of two chars
+            *t_type = TokenType::multi_chars(&temp);
+
+            if *t_type == Some(TokenType::Unknown) {
+                has_next_char = false;
+                *t_type = TokenType::single_chars(*c);
+            }
+        }
+        else {
+            *t_type = TokenType::single_chars(*c);
+            has_next_char = false;
+        }
+    }
+    // No next char to process, must be a single char
+    else {
+        has_next_char = false;
+        *t_type = TokenType::single_chars(*c);
+    }
+
+    if has_next_char && let Some(next_c) = chars.next() {
+        val.push(next_c);
+        *t_type = TokenType::multi_chars(&val);
+        *curr_column += 1;
+    }
 }
 
-// ex. 0xF6 , -123.4
-fn tokenize_numbers() {
-    
+/// Tokenizes number literals.
+///
+/// todo; documentation
+///
+///
+fn tokenize_numbers(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+    val.push(*c);
+    *curr_column += 1;
+
+    let mut decimal_count = 0;
+    let mut is_hex = false;
+
+    while let Some(peek_c) = chars.peek() {
+        if *c == '0' && *peek_c == 'x' { // Hex number
+            // Push 'x' into val
+            if let Some(next_c) = chars.next() {
+                val.push(next_c);
+                *curr_column += 1;
+                is_hex = true;
+            }
+        }
+        else if peek_c.is_numeric() { // Integer number
+            if let Some(next_c) = chars.next() {
+                val.push(next_c);
+                *curr_column += 1;
+            }
+        }
+        else if *peek_c == '.' && decimal_count == 0 { // Floating point num
+            decimal_count += 1;
+
+            // Push '.' and remaining nums
+            if let Some(next_c) = chars.next() {
+                val.push(next_c);
+                *curr_column += 1;
+                while let Some(peek_c) = chars.peek() {
+                    if peek_c.is_numeric() {
+                        if let Some(next_c) = chars.next() {
+                            val.push(next_c);
+                            *curr_column += 1;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+        }
+        // Invalid numerical character
+        else {
+            break;
+        }
+
+        // Process hex number. Special case because it can contain letters
+        if is_hex {
+            while let Some(peek_c) = chars.peek() {
+                // TODO: Implement hex number constraints
+                if peek_c.is_alphabetic() || peek_c.is_numeric() {
+                    if let Some(next_c) = chars.next() {
+                        val.push(next_c);
+                        *curr_column += 1;
+                    }
+                }
+                else {
+                    is_hex = false;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // ex. #include<stdio.h>

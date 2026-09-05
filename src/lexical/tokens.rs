@@ -185,31 +185,44 @@ impl TokenType {
 
 #[derive(Debug)]
 pub struct Token {
-    pub token:  Option<TokenType>,
-    pub value:  String,
-    pub line:   u32,
-    pub column: u32,
+    pub token  : Option<TokenType>,
+    pub value  : String,
+    pub line   : u32,
+    pub column : u32,
 }
 
 impl Token {
-    // Should return @s, but trimmed and unwrapped.
+    // TODO: WIP - Should return @s, but trimmed and unwrapped.
     pub fn convert_to_string(s: &str) -> String {
         s.to_string() // need to add more
     }
 
-    // Converts a string s and returns a number.
+    // TODO: WIP - Converts a string s and returns a number.
     pub fn convert_to_number<T>(s: &str) -> Result<T, ParseIntError> where T: std::str::FromStr<Err = ParseIntError> {
         FromStr::from_str(s)
     }
 
-    pub fn is_symbol(c: char) -> bool {
+    /// Verifies a character is a symbol.
+    ///
+    /// Examples:
+    /// ```
+    /// [!, =, &, /] are all valid symbols, and will return true.
+    /// [a, 4, b, \n] are not valid symbols, and will return false.
+    /// ```
+    pub fn is_symbol(c: &char) -> bool {
         if !c.is_alphanumeric() && !c.is_whitespace() {
             return true
         }
         false
     }
 
-    // Validate identifier - TODO: Implement self.value for this
+    /// Verifies that
+    ///
+    /// Examples:
+    /// ```
+    /// [foo, _foo, foo1] are valid identifiers, and will return true.
+    /// [1foo, foo-, foo$] are not valid identifiers, and will return false.
+    /// ```
     pub fn is_identifier(s: &str) -> bool {
         if s.contains('_') || s.chars().all(char::is_alphabetic) || s.chars().all(char::is_numeric) {
             let first_c = s.chars().next().unwrap();

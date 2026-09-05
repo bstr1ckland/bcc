@@ -1,2 +1,2 @@
-# 👾 Ben's C Compiler (bcc)
+# Ben's C Compiler (bcc)
 An ANSI C (C89) compiler.

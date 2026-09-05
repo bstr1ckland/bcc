@@ -15,71 +15,63 @@ pub fn tokenize(s: String) -> Vec<Token> {
 
     while let Some(c) = chars.next() {
         // Initializing variables that get updated later
-        let mut t_type = Some(TokenType::Unknown);
+        let mut t_type = TokenType::Unknown;
         let mut val = "".to_string();
 
-        if c == '\n' {
-            t_type = Some(TokenType::NewLine);
-            val.push('\n');
-            curr_line += 1;
-            curr_column = 1;
-        }
+        match c {
+            '\n' => {
+                t_type = TokenType::NewLine;
+                val.push('\n');
+                curr_line += 1;
+                curr_column = 1;
+            },
+            // Whitespace
+            ' ' => {
+                curr_column += 1;
+                continue;
+            },
 
-        else if c.is_whitespace() {
-            curr_column += 1;
-            continue;
-        }
+            // Character literals
+            '\'' => {
+                tokenize_char_literals(&c, &mut chars, &mut val, &mut curr_column, &mut t_type)
+            },
 
-        // Character literal, ex: 'c'
-        else if c == '\'' {
-            tokenize_char_literals(&c, &mut chars, &mut val, &mut curr_column);
-            t_type = Some(TokenType::CharLiteral);
-        }
+            // Identifiers || Keywords
+            c if c.is_alphabetic() || c == '_' => {
+                tokenize_words(&c, &mut chars, &mut val, &mut curr_column, &mut t_type)
+            },
 
-        // Identifiers & Keywords
-        else if c.is_alphabetic() || c == '_' {
-            tokenize_words(&c, &mut chars, &mut val, &mut curr_column);
+            // String literal
+            '"' => {
+                tokenize_string_literals(&c, &mut chars, &mut val, &mut curr_column, &mut t_type)
+            },
 
-            if Token::is_identifier(&val) {
-                t_type = Some(TokenType::Identifier);
+            // Comments
+            '/' => {
+                // TODO: Implement
+                // (C89 only supports /* */)
             }
-            if KEYWORDS.contains(&val.as_str()) {
-                t_type = TokenType::multi_chars(&val);
-            }
-        }
 
-        // String literal, ex: "hello"
-        else if c == '"' {
-            tokenize_string_literals(&c, &mut chars, &mut val, &mut curr_column);
-            t_type = Some(TokenType::StringLiteral);
-        }
+            // Number literals
+            x if x.is_numeric() => {
+                tokenize_numbers(&c, &mut chars, &mut val, &mut curr_column, &mut t_type);
+            },
 
-        // Handle comments, C89 only supports /* */.
-        else if c == '/' {
-            // TODO: Implement
-        }
+            // Include libraries
+            '#' => {
+                // TODO: Implement
+            },
 
-        // Number literals
-        else if c.is_numeric() {
-            tokenize_numbers(&c, &mut chars, &mut val, &mut curr_column);
+            // Symbols
+            c if Token::is_symbol(&c) => {
+                tokenize_symbols(&c, &mut chars, &mut val, &mut curr_column, &mut t_type)
+            },
 
-            if val.parse::<f64>().is_ok() || i64::from_str_radix(&val.strip_prefix("0x").unwrap(), 16).is_ok() {
-                t_type = Some(TokenType::NumberLiteral);
-            }
-        }
-
-        // #include<>
-        else if c == '#' {
-            // TODO: Implement
-        }
-
-        // Symbols like =, > , +
-        else if Token::is_symbol(&c) {
-            tokenize_symbols(&c, &mut chars, &mut val, &mut curr_column, &mut t_type);
+            _ => continue,
         }
 
         // Fail if token type hasn't been updated yet
-        if t_type == Some(TokenType::Unknown) {
+        if t_type == TokenType::Unknown {
             println!("Error: Unknown token found '{}' , at line {curr_line}, column {curr_column}.", c);
             exit(1);
         }
@@ -114,7 +106,7 @@ fn advance(c: &char, line: &mut u32, column: &mut u32) {
 ///
 ///
 ///
-fn tokenize_char_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+fn tokenize_char_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut TokenType) {
     val.push(*c); // push opening '
     if let Some(next_c) = chars.next() {
         val.push(next_c); // push the literal
@@ -124,6 +116,7 @@ fn tokenize_char_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut Strin
         }
     }
     *curr_column += 3;
+    *t_type = TokenType::CharLiteral;
 }
 
 /// Tokenizes string literals.
@@ -132,7 +125,7 @@ fn tokenize_char_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut Strin
 ///
 ///
 ///
-fn tokenize_string_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+fn tokenize_string_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut TokenType) {
     val.push(*c);
     *curr_column += 1;
 
@@ -143,6 +136,7 @@ fn tokenize_string_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut Str
         *curr_column += 1;
         val.push(next_c);
     }
+    *t_type = TokenType::StringLiteral;
 }
 
 /// Tokenizes keywords and identifiers.
@@ -150,7 +144,7 @@ fn tokenize_string_literals(c: &char, chars: &mut Peekable<Chars>, val: &mut Str
 /// todo; documentation
 ///
 ///
-fn tokenize_words(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+fn tokenize_words(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut TokenType) {
     val.push(*c);
     *curr_column += 1;
 
@@ -164,6 +158,13 @@ fn tokenize_words(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_
             *curr_column += 1;
         }
     }
+
+    if Token::is_identifier(&val) {
+        *t_type = TokenType::Identifier;
+    }
+    if KEYWORDS.contains(&val.as_str()) {
+        *t_type = TokenType::multi_chars(&val);
+    }
 }
 
 /// Tokenizes symbols.
@@ -172,7 +173,7 @@ fn tokenize_words(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_
 /// todo; documentation
 ///
 ///
-fn tokenize_symbols(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut Option<TokenType>) {
+fn tokenize_symbols(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut TokenType) {
     val.push(*c);
     *curr_column += 1;
 
@@ -188,7 +189,7 @@ fn tokenize_symbols(c: &char, chars: &mut Peekable<Chars>, val: &mut String, cur
             // See if we get a valid token with the combo of two chars
             *t_type = TokenType::multi_chars(&temp);
 
-            if *t_type == Some(TokenType::Unknown) {
+            if *t_type == TokenType::Unknown {
                 has_next_char = false;
                 *t_type = TokenType::single_chars(*c);
             }
@@ -214,9 +215,11 @@ fn tokenize_symbols(c: &char, chars: &mut Peekable<Chars>, val: &mut String, cur
 /// Tokenizes number literals.
 ///
 /// todo; documentation
+///  - maybe break up 'process hex' into another function?
+///  - this is super long
 ///
 ///
-fn tokenize_numbers(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32) {
+fn tokenize_numbers(c: &char, chars: &mut Peekable<Chars>, val: &mut String, curr_column: &mut u32, t_type: &mut TokenType) {
     val.push(*c);
     *curr_column += 1;
 
@@ -278,6 +281,10 @@ fn tokenize_numbers(c: &char, chars: &mut Peekable<Chars>, val: &mut String, cur
                     break;
                 }
             }
+        }
+
+        if val.parse::<f64>().is_ok() || i64::from_str_radix(&val.strip_prefix("0x").unwrap(), 16).is_ok() {
+            *t_type = TokenType::NumberLiteral;
         }
     }
 }

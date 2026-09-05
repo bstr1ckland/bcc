@@ -114,78 +114,77 @@ pub enum TokenType {
 
 impl TokenType {
     // Assign token type to each valid character.
-    pub fn single_chars(c: char) -> Option<TokenType> {
+    pub fn single_chars(c: char) -> TokenType {
         match c {
-            '{' => Some(TokenType::LeftBrace),
-            '}' => Some(TokenType::RightBrace),
-            '[' => Some(TokenType::LeftBracket),
-            ']' => Some(TokenType::RightBracket),
-            '(' => Some(TokenType::LeftParenthesis),
-            ')' => Some(TokenType::RightParenthesis),
-            ';' => Some(TokenType::SemiColon),
-            ':' => Some(TokenType::Colon),
-            '&' => Some(TokenType::Ampersand),
-            '%' => Some(TokenType::Percent),
-            '=' => Some(TokenType::Equal),
-            '.' => Some(TokenType::Dot),
-            ',' => Some(TokenType::Comma),
+            '{' => TokenType::LeftBrace,
+            '}' => TokenType::RightBrace,
+            '[' => TokenType::LeftBracket,
+            ']' => TokenType::RightBracket,
+            '(' => TokenType::LeftParenthesis,
+            ')' => TokenType::RightParenthesis,
+            ';' => TokenType::SemiColon,
+            ':' => TokenType::Colon,
+            '&' => TokenType::Ampersand,
+            '%' => TokenType::Percent,
+            '=' => TokenType::Equal,
+            '.' => TokenType::Dot,
+            ',' => TokenType::Comma,
+            '+' => TokenType::Plus,
+            '-' => TokenType::Minus,
+            '/' => TokenType::Slash,
+            '*' => TokenType::Star,
+            '>' => TokenType::GreaterThan,
+            '<' => TokenType::LessThan,
+            '|' => TokenType::Pipe,
 
-            '+' => Some(TokenType::Plus),
-            '-' => Some(TokenType::Minus),
-            '/' => Some(TokenType::Slash),
-            '*' => Some(TokenType::Star),
-            '>' => Some(TokenType::GreaterThan),
-            '<' => Some(TokenType::LessThan),
-            '|' => Some(TokenType::Pipe),
-
-            _ => Some(TokenType::Unknown),
+            _ => TokenType::Unknown,
         }
     }
 
     // Assign token type to each valid multi character string.
-    pub fn multi_chars(s: &str) -> Option<TokenType> {
+    pub fn multi_chars(s: &str) -> TokenType {
         match s {
-            ">=" => Some(TokenType::GreaterThanOrEqual),
-            "<=" => Some(TokenType::LessThanOrEqual),
-            "++" => Some(TokenType::PlusPlus),
-            "--" => Some(TokenType::MinusMinus),
-            "+=" => Some(TokenType::PlusEqual),
-            "-=" => Some(TokenType::MinusEqual),
-            "/=" => Some(TokenType::SlashEqual),
-            "*=" => Some(TokenType::StarEqual),
-            "==" => Some(TokenType::EqualEqual),
-            "!=" => Some(TokenType::NotEqual),
+            ">=" => TokenType::GreaterThanOrEqual,
+            "<=" => TokenType::LessThanOrEqual,
+            "++" => TokenType::PlusPlus,
+            "--" => TokenType::MinusMinus,
+            "+=" => TokenType::PlusEqual,
+            "-=" => TokenType::MinusEqual,
+            "/=" => TokenType::SlashEqual,
+            "*=" => TokenType::StarEqual,
+            "==" => TokenType::EqualEqual,
+            "!=" => TokenType::NotEqual,
 
             // Data types
-            "void"     => Some(TokenType::Void),
-            "int"      => Some(TokenType::Int),
-            "char"     => Some(TokenType::Char),
-            "float"    => Some(TokenType::Float),
-            "double"   => Some(TokenType::Double),
-            "short"    => Some(TokenType::Short),
-            "long"     => Some(TokenType::Long),
-            "signed"   => Some(TokenType::Signed),
-            "unsigned" => Some(TokenType::Unsigned),
-            "const"    => Some(TokenType::Const),
+            "void"     => TokenType::Void,
+            "int"      => TokenType::Int,
+            "char"     => TokenType::Char,
+            "float"    => TokenType::Float,
+            "double"   => TokenType::Double,
+            "short"    => TokenType::Short,
+            "long"     => TokenType::Long,
+            "signed"   => TokenType::Signed,
+            "unsigned" => TokenType::Unsigned,
+            "const"    => TokenType::Const,
+            
+            // Control
+            "if"       => TokenType::If,
+            "else"     => TokenType::Else,
+            "switch"   => TokenType::Switch,
+            "return"   => TokenType::Return,
+            "for"      => TokenType::For,
+            "while"    => TokenType::While,
+            "break"    => TokenType::Break,
+            "continue" => TokenType::Continue,
 
-            // Control Flow
-            "if"       => Some(TokenType::If),
-            "else"     => Some(TokenType::Else),
-            "switch"   => Some(TokenType::Switch),
-            "return"   => Some(TokenType::Return),
-            "for"      => Some(TokenType::For),
-            "while"    => Some(TokenType::While),
-            "break"    => Some(TokenType::Break),
-            "continue" => Some(TokenType::Continue),
-
-            _ => Some(TokenType::Unknown),
+            _ => TokenType::Unknown,
         }
     }
 }
 
 #[derive(Debug)]
 pub struct Token {
-    pub token  : Option<TokenType>,
+    pub token  : TokenType,
     pub value  : String,
     pub line   : u32,
     pub column : u32,
